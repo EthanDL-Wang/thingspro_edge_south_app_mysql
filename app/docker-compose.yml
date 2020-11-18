@@ -1,0 +1,10 @@
+version: '2'
+services:
+  app:
+    image: mxswdc2/fieldbusprotocol:${VERSION}-${ARCH}
+    restart: unless-stopped
+    volumes:
+      - ${APPMAN_APPPATH}/setting/:/etc/fieldbus/
+      - /var/thingspro/data/mx-api-token:/etc/app_setting/mx-api-token
+    environment:
+      - APPMAN_HOST_IP=${APPMAN_HOST_IP}

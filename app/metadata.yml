@@ -1,0 +1,13 @@
+kind: app
+version: v1
+spec:
+  name: fieldbusprotocol
+  displayname: Fieldbus Protocol
+  description: Sample Fieldbus Protocol App
+  version: "${VERSION}"
+  arch: ${ARCH}
+  # hardwares:
+  #   - serials
+  attributes:    
+    - openInSameTab
+  category: protocol

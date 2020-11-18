@@ -1,0 +1,81 @@
+#-------------------------------------------------------------------------------------------
+# build controller env stage
+#-------------------------------------------------------------------------------------------
+FROM golang:1.14.2-stretch AS build-controller-env
+
+ENV GO111MODULE=on
+ENV ARCH=armhf
+
+WORKDIR /usr/src/app
+RUN dpkg --add-architecture armhf && \
+    sed -i "s/deb.debian.org/cdn-fastly.deb.debian.org/" /etc/apt/sources.list && \
+    apt update && apt install -y crossbuild-essential-armhf
+
+COPY ./controller ./controller
+RUN cd ./controller && make fbcontroller
+#RUN ls /usr/src/app/controller/bin/
+
+#-------------------------------------------------------------------------------------------
+# build daemon env stage
+#-------------------------------------------------------------------------------------------
+#FROM 164073796161.dkr.ecr.ap-northeast-1.amazonaws.com/ci/debian:armhf-stretch AS build-daemon-env
+FROM 164073796161.dkr.ecr.ap-northeast-1.amazonaws.com/ci/protocol:armhf-stretch AS build-daemon-env
+
+
+#RUN wget https://mxswdc2.s3-ap-northeast-1.amazonaws.com/v3/edge/builds/edge-dx-engine/develop/145/build-armhf/libmx-dx1_1.0.1-1_armhf.deb \
+#  && wget https://mxswdc2.s3-ap-northeast-1.amazonaws.com/v3/edge/builds/edge-dx-engine/develop/145/build-armhf/libmx-dx-dev_1.0.1-1_armhf.deb \
+#  && wget https://mxswdc2.s3-ap-northeast-1.amazonaws.com/debian/all/libparson-dev_1.1.0-1_armhf.deb \
+#  && wget https://mxswdc2.s3-ap-northeast-1.amazonaws.com/debian/all/libparson1_1.1.0-1_armhf.deb \
+#  && wget https://mxswdc2.s3-ap-northeast-1.amazonaws.com/debian/all/libsqlite3-dev_3.28.0-1_armhf.deb \
+#  && wget https://mxswdc2.s3-ap-northeast-1.amazonaws.com/debian/all/libsqlite3-0_3.28.0-1_armhf.deb \
+#  && wget https://mxswdc2.s3-ap-northeast-1.amazonaws.com/v3/edge/builds/mosquitto/feat/support-unixsocket/16/libmosquitto1_1.6.8-1%2Bun1_armhf.deb \
+#  && apt-get update && apt-get install -qy ./*.deb
+
+RUN apt update \
+  && apt install libmariadb-dev -y
+
+ENV ARCH=armhf
+WORKDIR /usr/src/app
+COPY ./daemon ./daemon
+RUN cd ./daemon && make fbdaemon
+#RUN ls /usr/src/app/daemon/bin/
+
+#-------------------------------------------------------------------------------------------
+# target stage
+#-------------------------------------------------------------------------------------------
+FROM arm32v7/debian:9-slim
+
+
+WORKDIR /usr/src/app
+
+COPY --from=build-daemon-env /usr/lib/arm-linux-gnueabihf/libmx* \
+        /usr/lib/arm-linux-gnueabihf/libparson.so* \
+        /usr/lib/arm-linux-gnueabihf/libsqlite3.so* \
+        /usr/lib/arm-linux-gnueabihf/libsqlite3.so* \
+        /usr/lib/arm-linux-gnueabihf/libssl.so* \
+        /usr/lib/arm-linux-gnueabihf/libcrypto.so* \
+        /usr/lib/arm-linux-gnueabihf/libcares.so* \
+        /usr/lib/arm-linux-gnueabihf/libmosquitto* \
+        /usr/lib/arm-linux-gnueabihf/libprotobuf-c* \
+        /usr/lib/arm-linux-gnueabihf/libmariadb* \
+        /usr/lib/arm-linux-gnueabihf/
+
+COPY --from=build-daemon-env /usr/src/app/daemon/bin/fbdaemon /usr/local/sbin/
+COPY --from=build-controller-env /usr/src/app/controller/bin/fbcontroller /usr/local/sbin/
+COPY --from=build-daemon-env /tini /tini
+#COPY --from=build-daemon-env /usr/bin/curl /usr/bin/curl
+
+
+COPY conf/config.json /usr/src/app/
+
+# app start script
+COPY app/app.sh /usr/local/sbin/
+
+
+# Add Tini
+#ENV TINI_VERSION v0.18.0
+#ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-static-armhf /tini
+#RUN chmod +x /tini
+
+ENTRYPOINT ["/tini", "--"]
+CMD [ "/usr/local/sbin/app.sh" ]

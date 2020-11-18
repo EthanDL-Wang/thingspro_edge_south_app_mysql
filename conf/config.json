@@ -1,0 +1,1 @@
+{"deviceName":"dbdevice","pollingInterval":1000,"tags":[{"tagName":"temperature"},{"tagName":"humidity"},{"tagName":"aqi"}]}

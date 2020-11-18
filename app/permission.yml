@@ -1,0 +1,5 @@
+kind: permission
+version: v1
+spec:
+  - id: APP_FIELDBUSPROTOCOL_RW
+    name: Fieldbus Protocol

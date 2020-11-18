@@ -1,0 +1,12 @@
+{
+	"protocolName": "fieldbusprotocol",
+	"domainName": "fieldbusprotocol",
+	"providers": [
+		"fieldbusprotocol"
+	],
+	"methods" : {
+		"tag-list": "tags",
+		"direct-read": "operate/direct-read-tag",
+		"direct-write": "operate/direct-write-tag"
+	}
+}

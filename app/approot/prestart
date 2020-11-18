@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+
+APPROOT="$(dirname $0)"
+CONFIG="protocol.json"
+curl "http://127.0.0.1:59000/api/v1/tags/prtcl/update"  \
+	-X POST \
+	-H "Content-Type:application/json"  \
+	-H "mx-api-token:$(cat /var/thingspro/data/mx-api-token)" \
+	-d @./protocol.json \
+	--insecure

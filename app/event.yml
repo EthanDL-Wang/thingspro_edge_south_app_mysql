@@ -1,0 +1,18 @@
+- id: 2010
+  enable: false
+  severity: info
+  origin: fieldbusprotocol
+  category: SouthApp
+  event: configuration update success
+- id: 2011
+  enable: true
+  severity: warning
+  origin: fieldbusprotocol
+  category: SouthApp
+  event: configuration update failed
+- id: 2012
+  enable: true
+  severity: info
+  origin: fieldbusprotocol
+  category: SouthApp
+  event: device connected
